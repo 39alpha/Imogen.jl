@@ -145,21 +145,22 @@ function observe!(dist::TransferEntropy, source::AbstractArray{Int,1}, target::A
     dist
 end
 
-function estimate(dist::TransferEntropy)
-    entropy(dist.sources, dist.N) +
-    entropy(dist.predicates, dist.N) -
-    entropy(dist.states, dist.N) -
-    entropy(dist.histories, dist.N)
+function estimate(::Type{T}, dist::TransferEntropy) where {T<:Method}
+    entropy(T, dist.sources, dist.N) +
+    entropy(T, dist.predicates, dist.N) -
+    entropy(T, dist.states, dist.N) -
+    entropy(T, dist.histories, dist.N)
 end
 
-function transferentropy!(dist::TransferEntropy, source::AbstractArray{Int},
-                          target::AbstractArray{Int})
-    estimate(observe!(dist, source, target))
+function transferentropy!(::Type{T}, dist::TransferEntropy, source::AbstractArray{Int}, target::AbstractArray{Int}) where {T<:Method}
+    estimate(T, observe!(dist, source, target))
 end
+transferentropy!(dist::TransferEntropy, source::AbstractArray{Int}, target::AbstractArray{Int}) = transferentropy!(Approximate, dist, source, target)
 
-function transferentropy(source::AbstractArray{Int}, target::AbstractArray{Int}; kwargs...)
-    estimate(TransferEntropy(source, target; kwargs...))
+function transferentropy(::Type{T}, source::AbstractArray{Int}, target::AbstractArray{Int}; kwargs...) where {T<:Method}
+    estimate(T, TransferEntropy(source, target; kwargs...))
 end
+transferentropy(source::AbstractArray{Int}, target::AbstractArray{Int}; kwargs...) = transferentropy(Approximate, source, target; kwargs...)
 
 function transferentropy(::Type{Kraskov1}, xs::AbstractMatrix{Float64}, ys::AbstractMatrix{Float64};
                          k::Int=1, τ::Int=1, delay::Int=1, nn::Int=1, metric::Metric=Chebyshev())

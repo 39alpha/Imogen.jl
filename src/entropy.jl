@@ -54,7 +54,7 @@ function observe!(dist::Entropy, xs::AbstractArray{Int,1})
     dist
 end
 
-function entropy(xs::AbstractArray{Int}, N::Int)
+function entropy(::Type{Approximate}, xs::AbstractArray{Int}, N::Int)
     h = N * log2(N)
     for i in eachindex(xs)
         @inbounds n = xs[i]
@@ -65,11 +65,24 @@ function entropy(xs::AbstractArray{Int}, N::Int)
     h / N
 end
 
-estimate(dist::Entropy) = entropy(dist.data, dist.N)
+function entropy(::Type{Exact}, xs::AbstractArray{Int}, N::Int)
+    d = Dict{Int, Int}()
+    for (f, n) in eachfactor(N)
+        d[f] = get(d, f, 0) + N * n
+    end
+    for m in xs, (f, n) in eachfactor(m)
+        d[f] = get(d, f, 0) - m * n
+    end
+    ExactResult(d, N)
+end
 
-entropy!(dist::Entropy, xs::AbstractArray{Int}) = estimate(observe!(dist, xs))
+estimate(::Type{T}, dist::Entropy) where {T<:Method} = entropy(T, dist.data, dist.N)
 
-entropy(xs::AbstractArray{Int}) = estimate(Entropy(xs))
+entropy!(::Type{T}, dist::Entropy, xs::AbstractArray{Int}) where {T<:Method} = estimate(T, observe!(dist, xs))
+entropy!(dist::Entropy, xs::AbstractArray{Int}) = entropy!(Approximate, dist, xs)
+
+entropy(::Type{T}, xs::AbstractArray{Int}) where {T<:Method} = estimate(T, Entropy(xs))
+entropy(xs::AbstractArray{Int}) = estimate(Approximate, Entropy(xs))
 
 function clear!(dist::Entropy)
     fill!(dist.data, 0)

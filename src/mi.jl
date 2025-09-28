@@ -48,8 +48,8 @@ function MutualInfo(xs::AbstractArray{Int,1}, ys::AbstractArray{Int,1}; kwargs..
     observe!(MutualInfo(tuple(xmax...), tuple(ymax...); kwargs...), xs, ys)
 end
 
-function estimate(dist::MutualInfo)
-    entropy(dist.m1, dist.N) + entropy(dist.m2, dist.N) - entropy(dist.joint, dist.N)
+function estimate(::Type{T}, dist::MutualInfo) where {T<:Method}
+    entropy(T, dist.m1, dist.N) + entropy(T, dist.m2, dist.N) - entropy(T, dist.joint, dist.N)
 end
 
 function observe!(dist::MutualInfo, xs::AbstractArray{Int,3}, ys::AbstractArray{Int,3})
@@ -118,12 +118,20 @@ end
     dist
 end
 
+function mutualinfo!(::Type{T}, dist::MutualInfo, xs::AbstractArray{Int}, ys::AbstractArray{Int}; kwargs...) where {T<:Method}
+    estimate(T, observe!(dist, xs, ys, kwargs...))
+end
+
 function mutualinfo!(dist::MutualInfo, xs::AbstractArray{Int}, ys::AbstractArray{Int}; kwargs...)
-    estimate(observe!(dist, xs, ys, kwargs...))
+    mutualinfo!(Approximate, dist, xs, ys; kwargs...)
+end
+
+function mutualinfo(::Type{T}, xs::AbstractArray{Int}, ys::AbstractArray{Int}; kwargs...) where {T<:Method}
+    estimate(T, MutualInfo(xs, ys; kwargs...))
 end
 
 function mutualinfo(xs::AbstractArray{Int}, ys::AbstractArray{Int}; kwargs...)
-    estimate(MutualInfo(xs, ys; kwargs...))
+    mutualinfo(Approximate, xs, ys; kwargs...)
 end
 
 function mutualinfo(::Type{Kraskov1}, xs::AbstractMatrix{Float64}, ys::AbstractMatrix{Float64};

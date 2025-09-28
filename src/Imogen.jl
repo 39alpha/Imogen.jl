@@ -4,10 +4,19 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@optle
     @eval Base.Experimental.@optlevel 3
 end
 
-using DataFrames, Distances, NearestNeighbors, SpecialFunctions, Statistics, Reexport
+using DataFrames
+using Distances
+using LinearAlgebra
+using NearestNeighbors
+using Primes
+using Reexport
+using SpecialFunctions
+using Statistics
 
 @reexport using Random
 
+export Method, Approximate, Exact, Kozachenko, Kraskov, Kraskov1, Kraskov2
+export ExactResult, approximate
 export InfoDist, observe!, clear!, estimate
 export Entropy, entropy!, entropy
 export MutualInfo, mutualinfo!, mutualinfo
@@ -17,7 +26,7 @@ export TransferEntropy, transferentropy!, transferentropy
 export AbstractVertex, AbstractUnnamedVertex, AbstractNamedVertex, id, name, payload, above, below
 export UnnamedVertex, Vertex, clone
 export Hasse, top, bottom, vertices, zero!, prune, graphviz
-export WilliamsBeer, pid, pid!
+export WilliamsBeer, ExactWilliamsBeer, pid, pid!
 export Significance, EmpiricalSig, AnalyticSig, sig, @sig
 export histories, box, encodehistories
 

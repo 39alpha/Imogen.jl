@@ -49,8 +49,8 @@ function ActiveInfo(xs::AbstractArray{Int,1}; k::Int=1)
     observe!(ActiveInfo(xmax; k), xs)
 end
 
-function estimate(dist::ActiveInfo)
-    entropy(dist.future, dist.N) + entropy(dist.history, dist.N) - entropy(dist.joint, dist.N)
+function estimate(::Type{T}, dist::ActiveInfo) where {T<:Method}
+    entropy(T, dist.future, dist.N) + entropy(T, dist.history, dist.N) - entropy(T, dist.joint, dist.N)
 end
 
 function observe!(dist::ActiveInfo, xs::AbstractArray{Int,3})
@@ -107,11 +107,15 @@ end
     dist
 end
 
-function activeinfo!(dist::ActiveInfo, xs::AbstractArray{Int})
-    estimate(observe!(dist, xs))
+function activeinfo!(::Type{T}, dist::ActiveInfo, xs::AbstractArray{Int}) where {T<:Method}
+    estimate(T, observe!(dist, xs))
 end
+activeinfo!(dist::ActiveInfo, xs::AbstractArray{Int}) = activeinfo!(Approximate, dist, xs)
 
-activeinfo(xs::AbstractArray{Int}; kwargs...) = estimate(ActiveInfo(xs; kwargs...))
+function activeinfo(::Type{T}, xs::AbstractArray{Int}; kwargs...) where {T<:Method}
+    estimate(T, ActiveInfo(xs; kwargs...))
+end
+activeinfo(xs::AbstractArray{Int}; kwargs...) = activeinfo(Approximate, xs; kwargs...)
 
 function activeinfo(::Type{Kraskov1}, xs::AbstractMatrix{Float64};
                     k::Int=1, τ::Int=1, nn::Int=1, metric::Metric=Chebyshev())

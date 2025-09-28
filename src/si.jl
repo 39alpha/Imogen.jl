@@ -38,7 +38,7 @@ function observe!(dist::SpecificInfo, xs::AbstractVector{Int}, ys::AbstractVecto
     dist
 end
 
-function estimate(dist::SpecificInfo)
+function estimate(::Type{Approximate}, dist::SpecificInfo)
     si = zeros(dist.b1)
     N = dist.N
     for x1 in eachindex(dist.m1)
@@ -54,6 +54,29 @@ function estimate(dist::SpecificInfo)
     si
 end
 
+function estimate(::Type{Exact}, dist::SpecificInfo)
+    si = ExactResult[]
+    for x1 in eachindex(dist.m1)
+        d = Dict{Int,Int}()
+
+        n1 = dist.m1[x1]
+        for x2 in eachindex(dist.m2)
+            j, n2 = dist.joint[x1,x2], dist.m2[x2]
+            num, den = dist.N * j, n1 * n2
+
+            for (f, n) in eachfactor(num)
+                d[f] = get(d, f, 0) + j * n
+            end
+            for (f, n) in eachfactor(den)
+                d[f] = get(d, f, 0) - j * n
+            end
+        end
+
+        push!(si, ExactResult(d, n1))
+    end
+    si
+end
+
 @inline function clear!(dist::SpecificInfo)
     dist.joint[:] .= 0
     dist.m1[:] .= 0
@@ -62,30 +85,32 @@ end
     dist
 end
 
-function specificinfo!(si::SpecificInfo, stimulus::AbstractVector{Int},
-                       responses::AbstractMatrix{Int})
-    specificinfo!(si, stimulus, box(responses))
+function specificinfo!(::Type{T}, si::SpecificInfo, stimulus::AbstractVector{Int}, responses::AbstractVector{Int}) where {T<:Method}
+    estimate(T, observe!(dist, stimulus, responses))
 end
+specificinfo!(si::SpecificInfo, stimulus::AbstractVector{Int}, responses::AbstractVector{Int}) = specificinfo!(Approximate, si, stimulus, responses)
 
-function specificinfo!(si::SpecificInfo, stimulus::AbstractVector{Int},
-                       responses::AbstractMatrix{Int}, subset::AbstractVector{Int})
-    specificinfo!(si, stimulus, @view responses[subset, :])
+function specificinfo!(::Type{T}, si::SpecificInfo, stimulus::AbstractVector{Int}, responses::AbstractMatrix{Int}) where {T<:Method}
+    specificinfo!(T, si, stimulus, box(responses))
 end
+specificinfo!(si::SpecificInfo, stimulus::AbstractVector{Int}, responses::AbstractMatrix{Int}) = specificinfo!(Approximate, si, stimulus, responses)
 
-function specificinfo!(si::SpecificInfo, stimulus::AbstractVector{Int},
-                       responses::AbstractVector{Int})
-    estimate(observe!(dist, stimulus, responses))
+function specificinfo!(::Type{T}, si::SpecificInfo, stimulus::AbstractVector{Int}, responses::AbstractMatrix{Int}, subset::AbstractVector{Int}) where {T<:Method}
+    specificinfo!(T, si, stimulus, @view responses[subset, :])
 end
+specificinfo!(si::SpecificInfo, stimulus::AbstractVector{Int}, responses::AbstractMatrix{Int}, subset::AbstractVector{Int}) = specificinfo!(Approximate, si, stimulus, responses, subset)
 
-function specificinfo(stimulus::AbstractVector{Int}, responses::AbstractMatrix{Int})
-    specificinfo(stimulus, box(responses))
+function specificinfo(::Type{T}, stimulus::AbstractVector{Int}, responses::AbstractMatrix{Int}) where {T<:Method}
+    specificinfo(T, stimulus, box(responses))
 end
+specificinfo(stimulus::AbstractVector{Int}, responses::AbstractMatrix{Int}) = specificinfo(Approximate, stimulus, responses)
 
-function specificinfo(stimulus::AbstractVector{Int}, responses::AbstractMatrix{Int},
-                      subset::AbstractVector{Int})
-    specificinfo(stimulus, @view responses[subset, :])
+function specificinfo(::Type{T}, stimulus::AbstractVector{Int}, responses::AbstractMatrix{Int}, subset::AbstractVector{Int}) where {T<:Method}
+    specificinfo(T, stimulus, @view responses[subset, :])
 end
+specificinfo(stimulus::AbstractVector{Int}, responses::AbstractMatrix{Int}, subset::AbstractVector{Int}) = specificinfo(Approximate, stimulus, responses, subset)
 
-function specificinfo(stimulus::AbstractVector{Int}, responses::AbstractVector{Int})
-    estimate(SpecificInfo(stimulus, responses))
+function specificinfo(::Type{T}, stimulus::AbstractVector{Int}, responses::AbstractVector{Int}) where {T<:Method}
+    estimate(T, SpecificInfo(stimulus, responses))
 end
+specificinfo(stimulus::AbstractVector{Int}, responses::AbstractVector{Int}) = specificinfo(Approximate, stimulus, responses)

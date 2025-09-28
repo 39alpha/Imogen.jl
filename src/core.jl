@@ -11,6 +11,7 @@ observe!(::InfoDist, args...)
 clear!(::InfoDist)
 
 """
-    estimate(d)
+    estimate([::Type{<:Method}=Approximate], d)
 """
-estimate(::InfoDist)
+estimate(::Type{<:Method}, ::InfoDist)
+estimate(d::InfoDist) = estimate(Approximate, d)
