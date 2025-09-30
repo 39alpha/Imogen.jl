@@ -20,6 +20,7 @@ export ExactResult, approximate
 export InfoDist, observe!, clear!, estimate
 export Entropy, entropy!, entropy
 export MutualInfo, mutualinfo!, mutualinfo
+export TotalCorrelation, totalcor!, totalcor
 export ActiveInfo, activeinfo!, activeinfo
 export SpecificInfo, specificinfo!, specificinfo
 export TransferEntropy, transferentropy!, transferentropy
@@ -38,6 +39,7 @@ include("util.jl")
 include("entropy.jl")
 
 include("mi.jl")
+include("totalcor.jl")
 
 include("ai.jl")
 
