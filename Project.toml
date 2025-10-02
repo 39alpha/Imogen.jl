@@ -1,6 +1,6 @@
 name = "Imogen"
 uuid = "06c3e0d4-3ef7-44c8-b5b3-e8219edcdfd5"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Douglas G. Moore <doug@dglmoore.com>"]
 
 [deps]
