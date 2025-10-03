@@ -419,7 +419,19 @@ end
 
 function graphviz(filename::AbstractString, h::Hasse;
                   format=lowercase(last(splitext(filename)))[2:end])
-    open(`dot -T$format -o$filename`, "w", stdout) do io
-        show(io, MIME("text/dot"), h)
+
+    if Symbol(format) == :pdf
+        pipe = pipeline(`dot -Tpdf`, `pdf2ps - -`, `ps2pdf - $(filename)`)
+        open(pipe, "w") do io
+            show(io, MIME("text/dot"), h)
+        end
+    else
+        open(`dot -T$format -o$filename`, "w", stdout) do io
+            show(io, MIME("text/dot"), h)
+        end
     end
+end
+
+function graphviz(filename, args...; kwargs...)
+    (h::Hasse) -> graphviz(filename, h, args...; kwargs...)
 end
