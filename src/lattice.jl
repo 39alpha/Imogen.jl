@@ -393,6 +393,8 @@ function prune(f::Function, h::Hasse)
     Hasse(vs)
 end
 prune(h::Hasse) = prune(!iszero ∘ payload, h)
+prune(func::Function) = lattice -> prune(func, lattice)
+threshold(θ::Float64) = prune(v -> payload(v).Π ≥ Θ)
 
 Base.istextmime(::MIME"text/dot") = true
 
