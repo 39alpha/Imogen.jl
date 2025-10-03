@@ -44,12 +44,12 @@ function subsets0(n::Int)
 end
 
 function box(series::AbstractMatrix{Int})
-    smin, smax = extrema(series)
-    b = max(2, smin - smax + 1)
+    exs = vec(mapslices(extrema, series, dims=2))
+    bs = map(ex -> max(2, ex[2] - ex[1] + 1), exs)
     boxed = zeros(Int, size(series, 2))
     for j in 1:size(series, 2)
         for i in 1:size(series, 1)
-            boxed[j] = b*boxed[j] + series[i, j] - smin
+            boxed[j] = bs[i]*boxed[j] + series[i, j] - exs[i][1]
         end
         boxed[j] += 1
     end
